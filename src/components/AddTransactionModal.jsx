@@ -12,6 +12,7 @@ const AddTransactionModal = ({ onClose, editingTransaction }) => {
   const [description, setDescription] = useState(editingTransaction ? editingTransaction.description : '');
   const [category, setCategory] = useState(editingTransaction ? editingTransaction.category : CATEGORIES[2]);
   const [paymentSource, setPaymentSource] = useState(editingTransaction?.paymentSource || PAYMENT_SOURCES[0]);
+  const [status, setStatus] = useState(editingTransaction?.status || 'pending');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,14 +23,16 @@ const AddTransactionModal = ({ onClose, editingTransaction }) => {
         amount: parseFloat(amount),
         description,
         category,
-        paymentSource
+        paymentSource,
+        status,
       });
     } else {
       addTransaction({
         amount: parseFloat(amount),
         description,
         category,
-        paymentSource
+        paymentSource,
+        status,
       });
     }
     onClose();
@@ -158,6 +161,48 @@ const AddTransactionModal = ({ onClose, editingTransaction }) => {
                   {cat}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }}>Status</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setStatus('ready')}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: '1px solid',
+                    borderColor: status === 'ready' ? 'var(--accent-green)' : 'rgba(255,255,255,0.1)',
+                    background: status === 'ready' ? 'rgba(48, 209, 88, 0.15)' : 'transparent',
+                    color: status === 'ready' ? 'var(--accent-green)' : 'var(--text-secondary)',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Ready
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('pending')}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: '1px solid',
+                    borderColor: status === 'pending' ? 'var(--accent-orange)' : 'rgba(255,255,255,0.1)',
+                    background: status === 'pending' ? 'rgba(255, 159, 10, 0.15)' : 'transparent',
+                    color: status === 'pending' ? 'var(--accent-orange)' : 'var(--text-secondary)',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                   Pending
+                </button>
             </div>
           </div>
 

@@ -1,22 +1,35 @@
 import React, { useState } from 'react';
 import { useBudget } from '../context/BudgetContext';
-import { X, Trash2, Pencil } from 'lucide-react';
+import { X, Trash2, Pencil, Calendar, ArrowDownAZ, Tag } from 'lucide-react';
 import AddTransactionModal from './AddTransactionModal';
 
 const BankDetailsModal = ({ bankName, onClose }) => {
-  const { transactions, deleteTransaction, formatCurrency } = useBudget();
+  const { transactions, deleteTransaction, updateTransaction, formatCurrency } = useBudget();
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'alphabet', 'amount'
   
   // Filter transactions for this bank
-  // If bankName is 'Other' or similar fallback, we might need specific logic, 
-  // but for now assume exact match or "Unknown" for missing source.
-  const bankTransactions = transactions.filter(t => {
-      const source = t.paymentSource || 'Cash'; // Default fallback matching BankAnalysis
+  let bankTransactions = transactions.filter(t => {
+      const source = t.paymentSource || 'Cash'; 
       return source === bankName;
+  });
+
+  // Sort transactions
+  bankTransactions.sort((a, b) => {
+      if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
+      if (sortBy === 'alphabet') return a.description.localeCompare(b.description);
+      if (sortBy === 'amount') return parseFloat(b.amount) - parseFloat(a.amount);
+      if (sortBy === 'status') return (a.status || 'ready').localeCompare(b.status || 'ready');
+      return 0;
   });
   
   // Calculate total for this bank (for display)
   const totalAmount = bankTransactions.reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+
+  const toggleStatus = (transaction) => {
+    const newStatus = transaction.status === 'ready' ? 'pending' : 'ready';
+    updateTransaction(transaction.id, { ...transaction, status: newStatus });
+  };
 
   return (
     <div style={{
@@ -56,6 +69,61 @@ const BankDetailsModal = ({ bankName, onClose }) => {
             {formatCurrency(totalAmount)}
         </div>
 
+        {/* Sorting Controls */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
+            <button 
+                onClick={() => setSortBy('date')}
+                style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: sortBy === 'date' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: sortBy === 'date' ? 'white' : 'var(--text-secondary)',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer'
+                }}
+            >
+                <Calendar size={14} /> Date
+            </button>
+            <button 
+                onClick={() => setSortBy('alphabet')}
+                style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: sortBy === 'alphabet' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: sortBy === 'alphabet' ? 'white' : 'var(--text-secondary)',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer'
+                }}
+            >
+                <ArrowDownAZ size={14} /> A-Z
+            </button>
+            <button 
+                onClick={() => setSortBy('status')}
+                style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: sortBy === 'status' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: sortBy === 'status' ? 'white' : 'var(--text-secondary)',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer'
+                }}
+            >
+                <Tag size={14} /> Status
+            </button>
+        </div>
+
         {/* Transaction List */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
             {bankTransactions.length === 0 ? (
@@ -71,10 +139,36 @@ const BankDetailsModal = ({ bankName, onClose }) => {
                             alignItems: 'center',
                             padding: '16px',
                             background: 'var(--bg-secondary)',
-                            borderRadius: '16px'
+                            borderRadius: '16px',
+                            opacity: t.status === 'pending' ? 0.7 : 1
                         }}>
                             <div>
-                                <div style={{ fontWeight: '600', marginBottom: '4px' }}>{t.description}</div>
+                                <div style={{ fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {t.description}
+                                    {t.status === 'pending' ? (
+                                        <span style={{ 
+                                            background: 'var(--accent-orange)', 
+                                            color: 'black',
+                                            padding: '2px 6px', 
+                                            borderRadius: '4px',
+                                            fontSize: '10px',
+                                            fontWeight: '800'
+                                        }}>
+                                            PENDING
+                                        </span>
+                                    ) : (
+                                        <span style={{ 
+                                            background: 'rgba(48, 209, 88, 0.2)', 
+                                            color: 'var(--accent-green)',
+                                            padding: '2px 6px', 
+                                            borderRadius: '4px',
+                                            fontSize: '10px',
+                                            fontWeight: '800'
+                                        }}>
+                                            READY
+                                        </span>
+                                    )}
+                                </div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <span>{new Date(t.date).toLocaleDateString()}</span>
                                     <span style={{ 
@@ -88,7 +182,17 @@ const BankDetailsModal = ({ bankName, onClose }) => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div style={{ fontWeight: '600' }}>{formatCurrency(t.amount)}</div>
+                                <div 
+                                    onClick={() => toggleStatus(t)}
+                                    style={{ 
+                                        fontWeight: '600', 
+                                        cursor: 'pointer',
+                                        color: t.status === 'pending' ? 'var(--accent-orange)' : 'var(--text-primary)'
+                                    }}
+                                    title="Click to toggle status"
+                                >
+                                    {formatCurrency(t.amount)}
+                                </div>
                                 <button 
                                     onClick={() => setEditingTransaction(t)}
                                     style={{

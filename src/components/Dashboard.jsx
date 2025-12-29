@@ -5,11 +5,15 @@ import CategoryDetailsModal from './CategoryDetailsModal';
 import IncomeModal from './IncomeModal';
 
 import BankAnalysis from './BankAnalysis';
+import PendingAnalysis from './PendingAnalysis';
+
+import ConfirmationModal from './ConfirmationModal';
 
 const Dashboard = ({ onOpenSavings }) => {
-  const { salary, getBalance, getTotalExpenses, transactions, savings, getExpensesByCategory, formatCurrency, currency, setCurrency } = useBudget();
+  const { salary, getBalance, getTotalExpenses, transactions, savings, getExpensesByCategory, formatCurrency, currency, setCurrency, resetMonth } = useBudget();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   
   const balance = getBalance();
   const totalExpenses = getTotalExpenses();
@@ -23,7 +27,9 @@ const Dashboard = ({ onOpenSavings }) => {
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
-        marginBottom: 'var(--spacing-lg)' 
+        marginBottom: 'var(--spacing-lg)',
+        gap: '16px',
+        flexWrap: 'wrap'
       }}>
         <div>
           <h2 style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: '500' }}>
@@ -63,6 +69,27 @@ const Dashboard = ({ onOpenSavings }) => {
             </div>
         </div>
       </header>
+      
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+         <button 
+            onClick={() => setIsResetModalOpen(true)}
+            style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'var(--text-secondary)',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+            }}
+         >
+            🔄 Start New Month
+         </button>
+      </div>
 
       {/* Summary Card */}
       <div className="glass" style={{ 
@@ -101,8 +128,8 @@ const Dashboard = ({ onOpenSavings }) => {
         </div>
       </div>
 
-       {/* Savings Card */}
-       <div className="glass" style={{ 
+      {/* Savings Card */}
+      <div className="glass" style={{ 
         borderRadius: 'var(--radius-lg)', 
         padding: 'var(--spacing-md)',
         marginBottom: 'var(--spacing-xl)',
@@ -137,6 +164,11 @@ const Dashboard = ({ onOpenSavings }) => {
         }}>
             Add +
         </div>
+      </div>
+
+      {/* Pending Card */}
+      <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+          <PendingAnalysis />
       </div>
 
       {/* Payment Sources Breakdown */}
@@ -196,6 +228,14 @@ const Dashboard = ({ onOpenSavings }) => {
       {isIncomeModalOpen && (
         <IncomeModal onClose={() => setIsIncomeModalOpen(false)} />
       )}
+
+      <ConfirmationModal 
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onConfirm={resetMonth}
+        title="Start New Month?"
+        message="This will mark all your current transactions as Pending. Are you sure you want to proceed?"
+      />
 
     </div>
   );

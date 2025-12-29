@@ -220,6 +220,10 @@ export const BudgetProvider = ({ children }) => {
     }, {});
   };
 
+  const resetMonth = () => {
+    setTransactions(prev => prev.map(t => ({ ...t, status: 'pending' })));
+  };
+
   return (
     <BudgetContext.Provider value={{
       currency,
@@ -244,7 +248,8 @@ export const BudgetProvider = ({ children }) => {
       removeIncome,
       getTotalExpenses,
       getBalance,
-      getExpensesByCategory
+      getExpensesByCategory,
+      resetMonth
     }}>
       {children}
     </BudgetContext.Provider>
