@@ -4,6 +4,8 @@ import { TrendingUp, TrendingDown, DollarSign, PiggyBank, Settings } from 'lucid
 import CategoryDetailsModal from './CategoryDetailsModal';
 import IncomeModal from './IncomeModal';
 
+import BankAnalysis from './BankAnalysis';
+
 const Dashboard = ({ onOpenSavings }) => {
   const { salary, getBalance, getTotalExpenses, transactions, savings, getExpensesByCategory, formatCurrency, currency, setCurrency } = useBudget();
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -136,6 +138,9 @@ const Dashboard = ({ onOpenSavings }) => {
             Add +
         </div>
       </div>
+
+      {/* Payment Sources Breakdown */}
+      <BankAnalysis />
 
       {/* Spending Breakdown */}
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
