@@ -19,7 +19,21 @@ const Dashboard = ({ onOpenSavings }) => {
   const totalExpenses = getTotalExpenses();
   const spentPercentage = Math.min((totalExpenses / salary) * 100, 100);
   
-  const expensesByCategory = getExpensesByCategory();
+  const expensesByCategoryDetailed = useMemo(() => {
+    return transactions.reduce((acc, curr) => {
+      const { category, amount, status } = curr;
+      if (!acc[category]) acc[category] = { total: 0, ready: 0, pending: 0 };
+      
+      const val = parseFloat(amount);
+      acc[category].total += val;
+      if (status === 'pending') {
+        acc[category].pending += val;
+      } else {
+        acc[category].ready += val;
+      }
+      return acc;
+    }, {});
+  }, [transactions]);
 
   return (
     <div className="dashboard fade-in">
@@ -176,15 +190,33 @@ const Dashboard = ({ onOpenSavings }) => {
 
       {/* Spending Breakdown */}
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h3 style={{ marginBottom: 'var(--spacing-md)', fontSize: '18px', fontWeight: '600' }}>Spending Breakdown</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600' }}>Spending Breakdown</h3>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-blue)' }}></div>
+                <span style={{ color: 'var(--text-secondary)' }}>Paid</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-orange)' }}></div>
+                <span style={{ color: 'var(--text-secondary)' }}>Pending</span>
+            </div>
+            </div>
+        </div>
+
         <div className="glass" style={{ borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-md)' }}>
-           {Object.keys(expensesByCategory).length === 0 ? (
+           {Object.keys(expensesByCategoryDetailed).length === 0 ? (
              <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>No expenses yet.</div>
            ) : (
-             Object.entries(expensesByCategory)
-               .sort(([, a], [, b]) => b - a)
-               .map(([category, amount]) => {
-                 const percentage = Math.min((amount / totalExpenses) * 100, 100);
+             Object.entries(expensesByCategoryDetailed)
+               .sort(([, a], [, b]) => b.total - a.total)
+               .map(([category, data]) => {
+                 const { total, ready, pending } = data;
+                 const percentage = Math.min((total / totalExpenses) * 100, 100);
+                 
+                 const readyPct = total > 0 ? (ready / total) * 100 : 0;
+                 const pendingPct = total > 0 ? (pending / total) * 100 : 0;
+
                  return (
                    <div 
                       key={category} 
@@ -196,20 +228,34 @@ const Dashboard = ({ onOpenSavings }) => {
                           <span>{getCategoryIcon(category)}</span>
                           <span style={{ fontWeight: '500' }}>{category}</span>
                         </div>
-                        <div style={{ fontWeight: '600' }}>{formatCurrency(amount)}</div>
+                        <div style={{ fontWeight: '600' }}>{formatCurrency(total)}</div>
                      </div>
                      <div style={{ 
                         height: '6px', 
                         background: 'var(--bg-secondary)', 
                         borderRadius: '3px',
-                        overflow: 'hidden' 
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center'
                       }}>
                         <div style={{
                           height: '100%',
                           width: `${percentage}%`,
-                          background: 'var(--accent-blue)', // You could vary colors by category here
-                          borderRadius: '3px'
-                        }}></div>
+                          borderRadius: '3px',
+                          overflow: 'hidden',
+                          display: 'flex'
+                        }}>
+                             <div style={{ 
+                                width: `${readyPct}%`, 
+                                height: '100%', 
+                                background: 'var(--accent-blue)' // Main category color
+                             }}></div>
+                             <div style={{ 
+                                width: `${pendingPct}%`, 
+                                height: '100%', 
+                                background: 'var(--accent-orange)' 
+                             }}></div>
+                        </div>
                       </div>
                    </div>
                  );
