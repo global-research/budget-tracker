@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useBudget } from '../context/BudgetContext';
 import { X, Trash2, Pencil, Calendar, ArrowDownAZ, Tag, CreditCard } from 'lucide-react';
 import AddTransactionModal from './AddTransactionModal';
+import ConfirmModal from './ConfirmModal';
 
 const CategoryDetailsModal = ({ category, onClose }) => {
   const { transactions, deleteTransaction, updateTransaction, formatCurrency } = useBudget();
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [sortBy, setSortBy] = useState('date');
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
   
   // Filter transactions for this category
   let categoryTransactions = transactions.filter(t => t.category === category);
@@ -27,6 +29,13 @@ const CategoryDetailsModal = ({ category, onClose }) => {
   const toggleStatus = (transaction) => {
     const newStatus = transaction.status === 'ready' ? 'pending' : 'ready';
     updateTransaction(transaction.id, { ...transaction, status: newStatus });
+  };
+
+  const confirmDelete = () => {
+    if (transactionToDelete) {
+        deleteTransaction(transactionToDelete);
+        setTransactionToDelete(null);
+    }
   };
 
   return (
@@ -227,7 +236,7 @@ const CategoryDetailsModal = ({ category, onClose }) => {
                                     <Pencil size={16} />
                                 </button>
                                 <button 
-                                    onClick={() => deleteTransaction(t.id)}
+                                    onClick={() => setTransactionToDelete(t.id)}
                                     style={{
                                         background: 'rgba(255, 69, 58, 0.15)',
                                         border: 'none',
@@ -255,6 +264,16 @@ const CategoryDetailsModal = ({ category, onClose }) => {
                 onClose={() => setEditingTransaction(null)} 
             />
         )}
+
+        {/* Confirmation Modal */}
+        <ConfirmModal 
+            isOpen={!!transactionToDelete}
+            onClose={() => setTransactionToDelete(null)}
+            onConfirm={confirmDelete}
+            title="Delete Transaction"
+            message="Are you sure you want to delete this transaction? This action cannot be undone."
+            confirmText="Delete"
+        />
 
       </div>
     </div>
